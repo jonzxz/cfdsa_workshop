@@ -1,0 +1,24 @@
+volumes:
+  dc-data:
+
+networks:
+  dc-net:
+
+services:
+  dc-db:
+    image: stackupiss/northwind-db:v1
+    volumes:
+      - dc-data:/var/lib/mysql
+    networks:
+      - dc-net
+
+dc-app:
+  image: stackupiss/northwind-app:v1
+  networks:
+    - dc-net
+  environment:
+    - DB_HOST=dc-db
+    - DB_USER=root
+    - DB_PASSWORD=changeit
+  ports:
+    - 9090:3000
