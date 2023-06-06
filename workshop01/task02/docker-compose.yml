@@ -12,13 +12,13 @@ services:
     networks:
       - dc-net
 
-dc-app:
-  image: stackupiss/northwind-app:v1
-  networks:
-    - dc-net
-  environment:
-    - DB_HOST=dc-db
-    - DB_USER=root
-    - DB_PASSWORD=changeit
-  ports:
-    - 9090:3000
+  dc-app:
+    image: stackupiss/northwind-app:v1
+    networks:
+      - dc-net
+    environment:
+      - DB_HOST=dc-db
+      - DB_USER=root
+      - DB_PASSWORD=changeit
+    ports:
+      - 9090:3000
