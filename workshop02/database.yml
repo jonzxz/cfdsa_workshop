@@ -1,0 +1,40 @@
+---
+# Database
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bggdb
+  name: bggdb
+  namespace: bggns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bggdb
+  template:
+    metadata:
+      labels:
+        app: bggdb
+    spec:
+      containers:
+      - image: stackupiss/bgg-database:v1
+        name: bgg-db
+---
+# DB Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: bggdb-svc
+  namespace: bggns
+  labels:
+    app: bggdb-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: bggdb
+  ports:
+  - name: bggdb-access
+    protocol: TCP
+    port: 3306
+    targetPort: 3306

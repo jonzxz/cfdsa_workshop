@@ -1,0 +1,76 @@
+---
+# Webapp
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bggapp
+  name: bggapp
+  namespace: bggns
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bggapp
+  template:
+    metadata:
+      labels:
+        app: bggapp
+    spec:
+      containers:
+      - name: bgg-backend
+        image: stackupiss/bgg-backend:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        # Alternatively use envFrom:ConfigMapRef:name
+        # if the key name is the same as env var, since it loads the whole thing
+        # if the env var required and cm/secret key is different then got to use valueFrom
+        env:
+          - name: BGG_DB_USER
+            valueFrom:
+              configMapKeyRef:
+                name: bggdb-config
+                key: BGG_DB_USER
+          - name: BGG_DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: bggdb-config
+                key: BGG_DB_HOST
+          - name: BGG_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: bggdb-password
+                key: DB_PASSWORD
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          timeoutSeconds: 30
+          failureThreshold: 3
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+---
+# App service
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: bggapp-svc
+  name: bggapp-svc
+  namespace: bggns
+spec:
+  type: LoadBalancer
+  selector:
+    app: bggapp
+  ports:
+  - name: bggapp-access
+    protocol: TCP
+    port: 80
+    targetPort: 3000

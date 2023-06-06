@@ -1,0 +1,13 @@
+# DB Password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bggdb-config
+  namespace: bggns
+  labels:
+    name: bggdb-config
+    app: bggapp
+data:
+  BGG_DB_USER: root
+  BGG_DB_HOST: bggdb-svc.bggns.svc.cluster.local
