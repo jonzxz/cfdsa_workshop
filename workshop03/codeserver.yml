@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codeserver-deployment
+  namespace: codeserver
+  labels:
+    app: codeserver
+    kind: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codeserver
+  template:
+    metadata:
+      name: codeserver-app
+      labels:
+        app: codeserver
+    spec:
+      volumes:
+      - name: codeserver-workspace
+        persistentVolumeClaim:
+          claimName: codeserver-pvc
+      containers:
+      - name: codeserver-app
+        image: linuxserver/code-server:4.13.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: codeserver-port
+          containerPort: 8443
+        volumeMounts:
+        - name: codeserver-workspace
+          mountPath: /config/workspace
+        envFrom:
+        - configMapRef:
+            name: codeserver-config
+        - secretRef:
+            name: codeserver-secrets
+        readinessProbe:
+          httpGet:
+            path: /
+            port: codeserver-port
+          timeoutSeconds: 30
+          failureThreshold: 3
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /
+            port: codeserver-port
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codeserver-pvc
+  namespace: codeserver
+  labels:
+    app: codeserver
+    kind: pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: do-block-storage
+  resources:
+    requests:
+      storage: 2Gi
+
+---

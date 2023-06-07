@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codeserver-config
+  namespace: codeserver
+  labels:
+    app: codeserver
+data:
+  TZ: Asia/Singapore
+  DEFAULT_WORKSPACE: /config/workspace
+  PROXY_DOMAIN: code-104.248.98.2.nip.io
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: codeserver-secrets
+  namespace: codeserver
+  labels:
+    app: codeserver
+type: Opaque
+data:
+  PASSWORD: cGFzc3dvcmQ=
+  SUDO_PASSWORD: cGFzc3dvcmQ=
