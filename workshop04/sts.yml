@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio-sts
+  namespace: minio-ns
+  labels:
+    name: minio-sts
+    app: minio
+spec:
+  serviceName: minio-hsvc
+  replicas: 4
+  selector:
+    matchLabels:
+      app: minio
+      name: minio-app
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: minio-pvc
+      app: minio
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: do-block-storage
+      resources:
+        requests:
+          storage: 1Gi
+  template:
+    metadata:
+      name: minio-app
+      namespace: minio-ns
+      labels:
+        app: minio
+        name: minio-app
+    spec:
+      # do these before the actual minio container
+      initContainers:
+      - name: init-minio
+        image: busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c', 'chown 1001:1001 /data']
+        volumeMounts:
+        - name: minio-pvc
+          mountPath: /data
+      containers:
+      - name: minio-app
+        image: bitnami/minio:2023.6.2
+        imagePullPolicy: IfNotPresent
+        # override entry p oint
+        command:
+        - minio
+        - server
+        - --address=:9000
+        - --console-address=:9001
+        - http://minio-sts-{0...3}.minio-hsvc.minio-ns.svc.cluster.local/data
+        envFrom:
+        - secretRef:
+            name: minio-creds
+        volumeMounts:
+        - name: minio-pvc
+          mountPath: /data
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: 9000
+          timeoutSeconds: 30
+          failureThreshold: 3
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: 9000
+          timeoutSeconds: 30
+          failureThreshold: 3
+          successThreshold: 1
+        resources:
+          requests:
+            cpu: 200m
+            memory: 250Mi
+          limits:
+            cpu: 200m
+            memory: 250Mi

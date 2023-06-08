@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minio-ns
+  labels:
+    name: minio-ns
+    app: minio
